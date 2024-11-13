@@ -38,36 +38,35 @@ class EpicPlayer(Player):
     def holes(self, board):
         holes = 0
         exp_degree = 2
-        found_holes = []
-        for i in range(board.height):
-            #Gutter/dip to the right
-            found_holes = []
-            for x in range(board.width - 1):
-                if (x, i) in board.cells:
-                    for y in range(i, board.height):
-                        if (x+1, y) not in board.cells and (x+1, y) not in found_holes:
-                            holes += i**exp_degree
-                            found_holes.append((x+1, y))
-
-            #Gutter/dip to the left
-            for x in range(1, board.width):
-                found_holes = []
-                if (x, i) in board.cells:
-                    for y in range(i, board.height):
-                        if (x-1, y) not in board.cells and (x-1, y) not in found_holes:
-                            holes += y**exp_degree
-                            found_holes.append((x-1, y))
-
-            #Sealed hole/overhang
-            found_holes = []
+        holes_right = set()
+        holes_left = set()
+        holes_under = set()
+        for y in range(board.height):
             for x in range(board.width):
-                if (x, i) in board.cells:
-                    for y in range(i, board.height):
-                        if (x, y) not in board.cells:
-                            holes += y**(exp_degree+1)
+                if (x, y) in board.cells: #Do for every block cell
+                    for i in range(y, board.height): #Explore all cells below block
+                            
+                            #GUTTER/DIP TO THE RIGHT
+                            if x < board.width - 1: #Can't be rightmost column
+                                if (x+1, i) not in board.cells and (x+1, i) not in holes_right:
+                                    holes += i**exp_degree
+                                    holes_right.add((x+1, i))
+                            
+                            #GUTTER/DIP TO THE LEFT
+                            if x > 0: #Can't be leftmost column
+                                if (x-1, i) not in board.cells and (x-1, i) not in holes_left:
+                                    holes += i**exp_degree
+                                    holes_left.add((x-1, i))
+
+                            #Sealed hole/overhang
+                            if (x, i) not in board.cells and (x, i) not in holes_under:
+                                holes += i**(exp_degree + 1)
+                                holes_under.add((x, i))
         return holes
 
-
+    def simulate_current_move(self, board, action):
+        new_board = board.copy()
+        
 
     def choose_action(self, board):
         
