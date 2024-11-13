@@ -16,14 +16,14 @@ class EpicPlayer(Player):
     def aggregate_height(self, board):
         aggregate_height = 0
         for i in range(board.width):
-            aggregate_height += max((y for (x, y) in board.cells if x == i), default=0)
+            aggregate_height += 23 - min((y for (x, y) in board.cells if x == i), default=0)
         return aggregate_height
     
     #Minimise
     def bumpiness(self, board):
         bumpiness = 0
         for i in range(board.width - 1):
-            bumpiness += abs(max((y for (x, y) in board.cells if x == i), default=0) - max((y for (x, y) in board.cells if x == i+1), default=0))
+            bumpiness += abs(min((y for (x, y) in board.cells if x == i), default=0) - min((y for (x, y) in board.cells if x == i+1), default=0))
         return bumpiness
     
     #Maximise
@@ -34,47 +34,43 @@ class EpicPlayer(Player):
                 complete_lines += 1
         return complete_lines
     
+    #Minimise
     def holes(self, board):
         holes = 0
         exp_degree = 2
+        found_holes = []
         for i in range(board.height):
             #Gutter/dip to the right
+            found_holes = []
             for x in range(board.width - 1):
                 if (x, i) in board.cells:
-                    for y in range(i+1):
-                        if (x+1, y) not in board.cells:
+                    for y in range(i, board.height):
+                        if (x+1, y) not in board.cells and (x+1, y) not in found_holes:
                             holes += i**exp_degree
+                            found_holes.append((x+1, y))
+
             #Gutter/dip to the left
             for x in range(1, board.width):
+                found_holes = []
                 if (x, i) in board.cells:
-                    for y in range(i+1):
-                        if (x-1, y) not in board.cells:
+                    for y in range(i, board.height):
+                        if (x-1, y) not in board.cells and (x-1, y) not in found_holes:
                             holes += y**exp_degree
+                            found_holes.append((x-1, y))
+
             #Sealed hole/overhang
+            found_holes = []
             for x in range(board.width):
                 if (x, i) in board.cells:
-                    for y in range(i):
+                    for y in range(i, board.height):
                         if (x, y) not in board.cells:
                             holes += y**(exp_degree+1)
         return holes
-        
-                            
 
 
-    def print_board(self, board):
-        print("--------")
-        for y in range(24):
-            s = ""
-            for x in range(10):
-                if (x,y) in board.cells:
-                    s += "#"
-                else:
-                    s += "."
-            print(s, y)
-                
+
     def choose_action(self, board):
-        #self.print_board(board)
-        #time.sleep(0.5)
+        
 
         if self.random.random() > 0.97:
             # 3% chance we'll discard or drop a bomb

@@ -16,7 +16,6 @@ def run():
             pass
     except BlockLimitException:
         pass
-    print(max(y for (x,y) in board.cells))
     print(board.cells)
     return board.score
 
