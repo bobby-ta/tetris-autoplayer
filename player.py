@@ -72,7 +72,7 @@ class EpicPlayer(Player):
         if (len(board.cells) > 0):
             tallest_col = max(y for (x,y) in board.cells)
 
-        if tallest_col > 20 and self.random.random() > 0.9:
+        if tallest_col > 19 and self.random.random() > 0.7:
             # 3% chance we'll discard or drop a bomb
             if board.discards_remaining > 0:
                 return Action.Discard
