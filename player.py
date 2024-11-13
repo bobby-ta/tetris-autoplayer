@@ -35,9 +35,30 @@ class EpicPlayer(Player):
         return complete_lines
     
     def holes(self, board):
-        #Lower on the left
-        for x in range(board.width - 1):
-            pass
+        holes = 0
+        exp_degree = 2
+        for i in range(board.height):
+            #Gutter/dip to the right
+            for x in range(board.width - 1):
+                if (x, i) in board.cells:
+                    for y in range(i+1):
+                        if (x+1, y) not in board.cells:
+                            holes += i**exp_degree
+            #Gutter/dip to the left
+            for x in range(1, board.width):
+                if (x, i) in board.cells:
+                    for y in range(i+1):
+                        if (x-1, y) not in board.cells:
+                            holes += y**exp_degree
+            #Sealed hole/overhang
+            for x in range(board.width):
+                if (x, i) in board.cells:
+                    for y in range(i):
+                        if (x, y) not in board.cells:
+                            holes += y**(exp_degree+1)
+        return holes
+        
+                            
 
 
     def print_board(self, board):
