@@ -193,7 +193,6 @@ def run():
                 clock.tick(FRAMES_PER_SECOND)
 
         print("Score=", board.score)
-        print(board.cells)
         print("Press ESC in game window to exit")
         while True:
             check_stop()

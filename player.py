@@ -64,14 +64,63 @@ class EpicPlayer(Player):
                                 holes_under.add((x, i))
         return holes
 
-    def simulate_current_move(self, board, action):
-        new_board = board.copy()
+    #Return unique rotations for each shape
+    def spin_combos(self, board):
+        if board.falling.shape == Shape.I or board.falling.shape == Shape.Z or board.falling.shape == Shape.S:
+            #S and Z bias left/rightwards depending on stage of spin - look into it later
+            return [None, Rotation.Clockwise, [Rotation.Clockwise, Rotation.Clockwise]]
+        elif board.falling.shape == Shape.L or board.falling.shape == Shape.J or board.falling.shape == Shape.T:
+            return [None, Rotation.Clockwise, [Rotation.Clockwise, Rotation.Clockwise], [Rotation.Anticlockwise]]
+        else: #bomb or O
+            return [None]
+    
+    #Return all possible move sequences
+    def move_sequences(self, board):
+        spin_combos = self.spin_combos(board)
+        move_sequences = []
+        for i in spin_combos: #e.g. [Rotation.Clockwise, Rotation.Clockwise]
+            temp_clone = board.clone()
+            if i is None:
+                spin_combo = []
+            else:
+                spin_combo = i
+            
+            #Spin before shifting to avoid redundant/missing shifts
+            if isinstance(spin_combo, list):
+                #Iterate through individual rotations in complex spin
+                for individual_rotation in spin_combo: #e.g. Rotation.Clockwise
+                    temp_clone.falling.rotate(individual_rotation, temp_clone)
+            else:
+                temp_clone.falling.rotate(spin_combo, temp_clone)
+
+            #Shift left
+            dist_left = temp_clone.falling.left
+            for i in range(dist_left):
+                if isinstance(spin_combo, list):
+                    move_sequences.append(spin_combo + ([Direction.Left] * i) + [Direction.Drop])
+                else:
+                    move_sequences.append([spin_combo] + ([Direction.Left] * i) + [Direction.Drop])
+
+            #Shift right
+            dist_right = temp_clone.width - temp_clone.falling.right
+            for i in range(1, dist_right):
+                if isinstance(spin_combo, list):
+                    move_sequences.append(spin_combo + ([Direction.Right] * i) + [Direction.Drop])
+                else:
+                    move_sequences.append([spin_combo] + ([Direction.Right] * i) + [Direction.Drop])
+            
+
+        return move_sequences
         
 
     def choose_action(self, board):
-        
-
-        if self.random.random() > 0.97:
+        #Can return list of actions
+        print("\n")
+        print("Current shape: ", board.falling.shape)
+        print("Spin combos for current block: ")
+        for i in self.move_sequences(board):
+            print(i)
+        if self.random.random() > 0.95:
             # 3% chance we'll discard or drop a bomb
             return self.random.choice([
                 Action.Discard,
