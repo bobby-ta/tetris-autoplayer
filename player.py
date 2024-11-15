@@ -95,7 +95,7 @@ class EpicPlayer(Player):
 
             #Shift left
             dist_left = temp_clone.falling.left
-            for i in range(dist_left):
+            for i in range(dist_left + 1):
                 if isinstance(spin_combo, list):
                     move_sequences.append(spin_combo + ([Direction.Left] * i) + [Direction.Drop])
                 else:
@@ -115,8 +115,10 @@ class EpicPlayer(Player):
 
     def choose_action(self, board):
         #Can return list of actions
-        print("\n")
+        print("\n \n \n")
         print("Current shape: ", board.falling.shape)
+        print("Left: ", board.falling.left)
+        print("Right: ", board.falling.right)
         print("Spin combos for current block: ")
         for i in self.move_sequences(board):
             print(i)
