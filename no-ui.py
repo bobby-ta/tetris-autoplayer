@@ -16,7 +16,7 @@ def run():
             pass
     except BlockLimitException:
         pass
-    print(board.cells)
+    print(board)
     return board.score
 
 print(run())

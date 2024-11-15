@@ -1,7 +1,8 @@
+import random
 BOARD_HEIGHT = 24
 BOARD_WIDTH = 10
 
-DEFAULT_SEED = 42
+DEFAULT_SEED = random.randint(0, 1000000)
 
 BLOCK_LIMIT = 400
 

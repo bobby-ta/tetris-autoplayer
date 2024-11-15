@@ -1,4 +1,4 @@
-from board import Direction, Rotation, Action, Shape
+from board import Direction, Rotation, Action, Shape, NoBlockException
 from random import Random
 import time
 
@@ -16,14 +16,14 @@ class EpicPlayer(Player):
     def aggregate_height(self, board):
         aggregate_height = 0
         for i in range(board.width):
-            aggregate_height += 23 - min((y for (x, y) in board.cells if x == i), default=0)
+            aggregate_height += 23 - min((y for (x, y) in board.cells if x == i), default=23)
         return aggregate_height
     
     #Minimise
     def bumpiness(self, board):
         bumpiness = 0
         for i in range(board.width - 1):
-            bumpiness += abs(min((y for (x, y) in board.cells if x == i), default=0) - min((y for (x, y) in board.cells if x == i+1), default=0))
+            bumpiness += abs(min((y for (x, y) in board.cells if x == i), default=23) - min((y for (x, y) in board.cells if x == i+1), default=23))
         return bumpiness
     
     #Maximise
@@ -50,17 +50,21 @@ class EpicPlayer(Player):
                             if x < board.width - 1: #Can't be rightmost column
                                 if (x+1, i) not in board.cells and (x+1, i) not in holes_right:
                                     holes += i**exp_degree
+                                    #holes += 1
                                     holes_right.add((x+1, i))
                             
                             #GUTTER/DIP TO THE LEFT
                             if x > 0: #Can't be leftmost column
                                 if (x-1, i) not in board.cells and (x-1, i) not in holes_left:
                                     holes += i**exp_degree
+                                    #holes += 1
                                     holes_left.add((x-1, i))
 
                             #Sealed hole/overhang
+                            #Punish VERY heavily
                             if (x, i) not in board.cells and (x, i) not in holes_under:
                                 holes += i**(exp_degree + 1)
+                                #holes += 1
                                 holes_under.add((x, i))
         return holes
 
@@ -111,32 +115,48 @@ class EpicPlayer(Player):
             
 
         return move_sequences
+    
+    #Run move sequence on clone
+    def simulate_move_sequence(self, board, move_sequence):
+        try:
+            for move in move_sequence:
+                if isinstance(move, Rotation):
+                    board.rotate(move)
+                elif isinstance(move, Direction):
+                    board.move(move)
+        except NoBlockException:
+            pass
+
+    #Evaluate move sequence
+    def evaluate_move_sequence(self, board, move_sequence):
+        temp_clone = board.clone()
+        self.simulate_move_sequence(temp_clone, move_sequence)
         
+        
+        aggregate_height = self.aggregate_height(temp_clone)
+        bumpiness = self.bumpiness(temp_clone)
+        complete_lines = self.complete_lines(temp_clone)
+        holes = self.holes(temp_clone)
+
+        complete_lines_weight = 1
+        #Make dependent on height - stacks to top in endgame
+        holes_weight = -0.02
+        aggregate_height_weight = -1
+        bumpiness_weight = -1
+
+        
+        return (complete_lines * complete_lines_weight) + (holes * holes_weight) + (aggregate_height * aggregate_height_weight) + (bumpiness * bumpiness_weight)
 
     def choose_action(self, board):
-        #Can return list of actions
-        print("\n \n \n")
-        print("Current shape: ", board.falling.shape)
-        print("Left: ", board.falling.left)
-        print("Right: ", board.falling.right)
-        print("Spin combos for current block: ")
-        for i in self.move_sequences(board):
-            print(i)
-        if self.random.random() > 0.95:
-            # 3% chance we'll discard or drop a bomb
-            return self.random.choice([
-                Action.Discard,
-                Action.Bomb,
-            ])
-        else:
-            # 97% chance we'll make a normal move
-            return self.random.choice([
-                Direction.Left,
-                Direction.Right,
-                Direction.Down,
-                Rotation.Anticlockwise,
-                Rotation.Clockwise,
-            ])
+        high_score = -1000000000
+        best_sequence = None
+        for move_sequence in self.move_sequences(board):
+            if self.evaluate_move_sequence(board, move_sequence) > high_score:
+                high_score = self.evaluate_move_sequence(board, move_sequence)
+                best_sequence = move_sequence
+        
+        return best_sequence
+        
 
 #Default player
 class RandomPlayer(Player):
