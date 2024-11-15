@@ -29,10 +29,23 @@ class EpicPlayer(Player):
     #Maximise
     def complete_lines(self, board):
         complete_lines = 0
+        consecutive = 0
+        double = 0
+        triple = 0
+        tetris = 0
         for y in range(board.height):
             if all((x, y) in board.cells for x in range(board.width)):
                 complete_lines += 1
-        return complete_lines
+                consecutive += 1
+            else:
+                if consecutive == 2:
+                    double += 1
+                elif consecutive == 3:
+                    triple += 1
+                elif consecutive == 4:
+                    tetris += 1
+                consecutive = 0
+        return complete_lines + double*4 + triple*16 + tetris*64
     
     #Minimise
     def holes(self, board):
@@ -49,22 +62,22 @@ class EpicPlayer(Player):
                             #GUTTER/DIP TO THE RIGHT
                             if x < board.width - 1: #Can't be rightmost column
                                 if (x+1, i) not in board.cells and (x+1, i) not in holes_right:
-                                    #holes += i**exp_degree
-                                    holes += 1
+                                    holes += (24-i)**exp_degree
+                                    #holes += 1
                                     holes_right.add((x+1, i))
                             
                             #GUTTER/DIP TO THE LEFT
                             if x > 0: #Can't be leftmost column
                                 if (x-1, i) not in board.cells and (x-1, i) not in holes_left:
-                                    #holes += i**exp_degree
-                                    holes += 1
+                                    holes += (24-i)**exp_degree
+                                    #holes += 1
                                     holes_left.add((x-1, i))
 
                             #Sealed hole/overhang
                             #Punish VERY heavily
                             if (x, i) not in board.cells and (x, i) not in holes_under:
-                                #holes += i**(exp_degree + 1)
-                                holes += 1
+                                holes += (24-i)**(exp_degree + 1)
+                                #holes += 1
                                 holes_under.add((x, i))
         return holes
 
@@ -129,6 +142,7 @@ class EpicPlayer(Player):
 
     #Evaluate move sequence
     def evaluate_move_sequence(self, board, move_sequence):
+        initial_score = board.score
         temp_clone = board.clone()
         self.simulate_move_sequence(temp_clone, move_sequence)
         
@@ -138,24 +152,24 @@ class EpicPlayer(Player):
         complete_lines = self.complete_lines(temp_clone)
         holes = self.holes(temp_clone)
 
-        complete_lines_weight = 0.75
+        complete_lines_weight = 1
         #Make dependent on height - stacks to top in endgame
         try:
-            holes_weight = -0.5 / (aggregate_height * 0.5)
+            holes_weight = -0.5
         except ZeroDivisionError: #Flat board
             holes_weight = -0.5
-        aggregate_height_weight = -0.5
+        aggregate_height_weight = -0.1 #conservative
         bumpiness_weight = -0.2
 
         
         return (complete_lines * complete_lines_weight) + (holes * holes_weight) + (aggregate_height * aggregate_height_weight) + (bumpiness * bumpiness_weight)
 
     def choose_action(self, board):
-        high_score = -1000000000
+        max_coefficient = -1000000000
         best_sequence = None
         for move_sequence in self.move_sequences(board):
-            if self.evaluate_move_sequence(board, move_sequence) > high_score:
-                high_score = self.evaluate_move_sequence(board, move_sequence)
+            if self.evaluate_move_sequence(board, move_sequence) > max_coefficient:
+                max_coefficient = self.evaluate_move_sequence(board, move_sequence)
                 best_sequence = move_sequence
         
         return best_sequence
