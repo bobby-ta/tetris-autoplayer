@@ -49,22 +49,22 @@ class EpicPlayer(Player):
                             #GUTTER/DIP TO THE RIGHT
                             if x < board.width - 1: #Can't be rightmost column
                                 if (x+1, i) not in board.cells and (x+1, i) not in holes_right:
-                                    holes += i**exp_degree
-                                    #holes += 1
+                                    #holes += i**exp_degree
+                                    holes += 1
                                     holes_right.add((x+1, i))
                             
                             #GUTTER/DIP TO THE LEFT
                             if x > 0: #Can't be leftmost column
                                 if (x-1, i) not in board.cells and (x-1, i) not in holes_left:
-                                    holes += i**exp_degree
-                                    #holes += 1
+                                    #holes += i**exp_degree
+                                    holes += 1
                                     holes_left.add((x-1, i))
 
                             #Sealed hole/overhang
                             #Punish VERY heavily
                             if (x, i) not in board.cells and (x, i) not in holes_under:
-                                holes += i**(exp_degree + 1)
-                                #holes += 1
+                                #holes += i**(exp_degree + 1)
+                                holes += 1
                                 holes_under.add((x, i))
         return holes
 
@@ -138,11 +138,14 @@ class EpicPlayer(Player):
         complete_lines = self.complete_lines(temp_clone)
         holes = self.holes(temp_clone)
 
-        complete_lines_weight = 1
+        complete_lines_weight = 0.75
         #Make dependent on height - stacks to top in endgame
-        holes_weight = -0.02
-        aggregate_height_weight = -1
-        bumpiness_weight = -1
+        try:
+            holes_weight = -0.5 / (aggregate_height * 0.5)
+        except ZeroDivisionError: #Flat board
+            holes_weight = -0.5
+        aggregate_height_weight = -0.5
+        bumpiness_weight = -0.2
 
         
         return (complete_lines * complete_lines_weight) + (holes * holes_weight) + (aggregate_height * aggregate_height_weight) + (bumpiness * bumpiness_weight)
