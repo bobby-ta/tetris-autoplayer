@@ -194,12 +194,14 @@ def run():
 
         print("Score=", board.score)
         print("Press ESC in game window to exit")
+        print("Seed=", DEFAULT_SEED)
         while True:
             check_stop()
     except BlockLimitException:
         print("Out of blocks")
         print("Score=", board.score)
         print("Press ESC in game window to exit")
+        print("Seed=", DEFAULT_SEED)
         while True:
             check_stop()
     except KeyboardInterrupt:

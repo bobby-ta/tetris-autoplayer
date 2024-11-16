@@ -27,25 +27,12 @@ class EpicPlayer(Player):
         return bumpiness
     
     #Maximise
-    def complete_lines(self, board):
-        complete_lines = 0
-        consecutive = 0
-        double = 0
-        triple = 0
-        tetris = 0
-        for y in range(board.height):
-            if all((x, y) in board.cells for x in range(board.width)):
-                complete_lines += 1
-                consecutive += 1
-            else:
-                if consecutive == 2:
-                    double += 1
-                elif consecutive == 3:
-                    triple += 1
-                elif consecutive == 4:
-                    tetris += 1
-                consecutive = 0
-        return complete_lines + double*4 + triple*16 + tetris*64
+    def lines_cleared(self, current_score, temp_clone):
+        #Compare score before and after placing block
+        #Lines are cleared on drop, so score will update
+        return ((temp_clone.score - current_score) // 25)**3 * 25
+        
+    
     
     #Minimise
     def holes(self, board):
@@ -76,7 +63,7 @@ class EpicPlayer(Player):
                             #Sealed hole/overhang
                             #Punish VERY heavily
                             if (x, i) not in board.cells and (x, i) not in holes_under:
-                                holes += (24-i)**(exp_degree + 1)
+                                holes += (24-i)**(exp_degree + 2)+20
                                 #holes += 1
                                 holes_under.add((x, i))
         return holes
@@ -120,6 +107,8 @@ class EpicPlayer(Player):
 
             #Shift right
             dist_right = temp_clone.width - temp_clone.falling.right
+            if temp_clone.falling.shape != Shape.I and min((y for (x, y) in temp_clone.cells), default=23) > 15:
+                dist_right -= 1
             for i in range(1, dist_right):
                 if isinstance(spin_combo, list):
                     move_sequences.append(spin_combo + ([Direction.Right] * i) + [Direction.Drop])
@@ -142,27 +131,29 @@ class EpicPlayer(Player):
 
     #Evaluate move sequence
     def evaluate_move_sequence(self, board, move_sequence):
-        initial_score = board.score
+        current_score = board.score
         temp_clone = board.clone()
         self.simulate_move_sequence(temp_clone, move_sequence)
         
         
         aggregate_height = self.aggregate_height(temp_clone)
         bumpiness = self.bumpiness(temp_clone)
-        complete_lines = self.complete_lines(temp_clone)
+        lines_cleared = self.lines_cleared(current_score, temp_clone)
         holes = self.holes(temp_clone)
 
-        complete_lines_weight = 5
+        lines_cleared_weight = 1
         #Make dependent on height - stacks to top in endgame
         try:
-            holes_weight = -0.5 * 8 / aggregate_height
+            holes_weight = -0.5 * 12 / aggregate_height
         except ZeroDivisionError: #Flat board
-            holes_weight = -0.5
+            holes_weight = -0.75
         aggregate_height_weight = -0.1 #conservative
         bumpiness_weight = -0.15
 
-        
-        return (complete_lines * complete_lines_weight) + (holes * holes_weight) + (aggregate_height * aggregate_height_weight) + (bumpiness * bumpiness_weight)
+        if (lines_cleared > 0):
+            print((lines_cleared * lines_cleared_weight), (holes * holes_weight), (aggregate_height * aggregate_height_weight), (bumpiness * bumpiness_weight))
+
+        return (lines_cleared * lines_cleared_weight) + (holes * holes_weight) + (aggregate_height * aggregate_height_weight) + (bumpiness * bumpiness_weight)
 
     def choose_action(self, board):
         max_coefficient = -1000000000
