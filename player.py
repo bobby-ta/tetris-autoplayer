@@ -152,14 +152,14 @@ class EpicPlayer(Player):
         complete_lines = self.complete_lines(temp_clone)
         holes = self.holes(temp_clone)
 
-        complete_lines_weight = 1
+        complete_lines_weight = 5
         #Make dependent on height - stacks to top in endgame
         try:
-            holes_weight = -0.5
+            holes_weight = -0.5 * 8 / aggregate_height
         except ZeroDivisionError: #Flat board
             holes_weight = -0.5
         aggregate_height_weight = -0.1 #conservative
-        bumpiness_weight = -0.2
+        bumpiness_weight = -0.15
 
         
         return (complete_lines * complete_lines_weight) + (holes * holes_weight) + (aggregate_height * aggregate_height_weight) + (bumpiness * bumpiness_weight)

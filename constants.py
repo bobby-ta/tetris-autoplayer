@@ -2,8 +2,11 @@ import random
 BOARD_HEIGHT = 24
 BOARD_WIDTH = 10
 
+DEFAULT_SEED = 560351 #good seed
+DEFAULT_SEED = 370113 #good seed
+DEFAULT_SEED = 652972 #bogey seed
 DEFAULT_SEED = random.randint(0, 1000000)
-#DEFAULT_SEED = 42
+
 
 BLOCK_LIMIT = 400
 

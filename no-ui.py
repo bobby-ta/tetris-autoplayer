@@ -17,6 +17,7 @@ def run():
     except BlockLimitException:
         pass
     print(board)
+    print(DEFAULT_SEED)
     return board.score
 
 print(run())
