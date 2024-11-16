@@ -62,6 +62,7 @@ class EpicPlayer(Player):
 
                             #Sealed hole/overhang
                             #Punish VERY heavily
+                            #Maybe even heavier
                             if (x, i) not in board.cells and (x, i) not in holes_under:
                                 holes += (24-i)**(exp_degree + 2)+20
                                 #holes += 1
@@ -107,7 +108,7 @@ class EpicPlayer(Player):
 
             #Shift right
             dist_right = temp_clone.width - temp_clone.falling.right
-            if temp_clone.falling.shape != Shape.I and min((y for (x, y) in temp_clone.cells), default=23) > 15:
+            if temp_clone.falling.shape != Shape.I and min((y for (x, y) in temp_clone.cells), default=23) > 17:
                 dist_right -= 1
             for i in range(1, dist_right):
                 if isinstance(spin_combo, list):
