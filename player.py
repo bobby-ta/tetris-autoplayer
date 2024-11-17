@@ -37,46 +37,53 @@ class EpicPlayer(Player):
     #Minimise
     def holes(self, board):
         holes = 0
-        exp_degree = 2
-        holes_right = set()
-        holes_left = set()
-        holes_under = set()
+        exp_degree = 4
+        holes_already_found = set()
         for y in range(board.height):
             for x in range(board.width):
                 if (x, y) in board.cells: #Do for every block cell
                     for i in range(y, board.height): #Explore all cells below block
-                            
-                            #GUTTER/DIP TO THE RIGHT
-                            if x < board.width - 1: #Can't be rightmost column
-                                if (x+1, i) not in board.cells and (x+1, i) not in holes_right:
-                                    holes += (24-i)**exp_degree
-                                    #holes += 1
-                                    holes_right.add((x+1, i))
-                            
-                            #GUTTER/DIP TO THE LEFT
-                            if x > 0: #Can't be leftmost column
-                                if (x-1, i) not in board.cells and (x-1, i) not in holes_left:
-                                    holes += (24-i)**exp_degree
-                                    #holes += 1
-                                    holes_left.add((x-1, i))
-
                             #Sealed hole/overhang
                             #Punish VERY heavily
                             #Maybe even heavier
-                            if (x, i) not in board.cells and (x, i) not in holes_under:
-                                holes += (24-i)**(exp_degree + 2)+20
-                                #holes += 1
-                                holes_under.add((x, i))
+                            if (x, i) not in board.cells and (x, i) not in holes_already_found:
+                                holes += (24-i)**(exp_degree)+20
+                                holes_already_found.add((x, i))
         return holes
+
+    def gutters(self, board):
+        gutters = 0
+        exp_degree = 2
+        gutters_right = set()
+        gutters_left = set()
+        for y in range(board.height):
+            for x in range(board.width):
+                if (x, y) in board.cells: #Do for every block cell
+                    for i in range(y, board.height): #Explore all cells below block
+                            #Right
+                            if x < board.width - 1: #Can't be rightmost column
+                                if (x+1, i) not in board.cells and (x+1, i) not in gutters_right:
+                                    gutters += (24-i)**exp_degree
+                                    gutters_right.add((x+1, i))
+                            
+                            #Left
+                            if x > 0: #Can't be leftmost column
+                                if (x-1, i) not in board.cells and (x-1, i) not in gutters_left:
+                                    gutters += (24-i)**exp_degree
+                                    gutters_left.add((x-1, i))
+        return gutters
+    
+    def max_height(self, board):
+        return 23 - min((y for (x, y) in board.cells), default=23)
 
     #Return unique rotations for each shape
     def spin_combos(self, board):
-        if board.falling.shape == Shape.I or board.falling.shape == Shape.Z or board.falling.shape == Shape.S:
+        if board.falling.shape == Shape.Z or board.falling.shape == Shape.S:
             #S and Z bias left/rightwards depending on stage of spin - look into it later
             return [None, Rotation.Clockwise, [Rotation.Clockwise, Rotation.Clockwise]]
         elif board.falling.shape == Shape.L or board.falling.shape == Shape.J or board.falling.shape == Shape.T:
             return [None, Rotation.Clockwise, [Rotation.Clockwise, Rotation.Clockwise], [Rotation.Anticlockwise]]
-        else: #bomb or O
+        else: #bomb or O or I (why would u ever make I horizontal)
             return [None]
     
     #Return all possible move sequences
@@ -141,20 +148,24 @@ class EpicPlayer(Player):
         bumpiness = self.bumpiness(temp_clone)
         lines_cleared = self.lines_cleared(current_score, temp_clone)
         holes = self.holes(temp_clone)
+        gutters = self.gutters(temp_clone)
+        max_height = self.max_height(temp_clone)
 
         lines_cleared_weight = 1
         #Make dependent on height - stacks to top in endgame
         try:
-            holes_weight = -0.5 * 12 / aggregate_height
+            holes_weight = -6 / aggregate_height
         except ZeroDivisionError: #Flat board
             holes_weight = -0.75
+
+        gutters_weight = holes_weight
         aggregate_height_weight = -0.1 #conservative
         bumpiness_weight = -0.15
 
         if (lines_cleared > 0):
-            print((lines_cleared * lines_cleared_weight), (holes * holes_weight), (aggregate_height * aggregate_height_weight), (bumpiness * bumpiness_weight))
+            print((lines_cleared * lines_cleared_weight), (holes * holes_weight), (aggregate_height * aggregate_height_weight), (bumpiness * bumpiness_weight), (gutters * gutters_weight))
 
-        return (lines_cleared * lines_cleared_weight) + (holes * holes_weight) + (aggregate_height * aggregate_height_weight) + (bumpiness * bumpiness_weight)
+        return (lines_cleared * lines_cleared_weight) + (holes * holes_weight) + (aggregate_height * aggregate_height_weight) + (bumpiness * bumpiness_weight) + (gutters * gutters_weight)
 
     def choose_action(self, board):
         max_coefficient = -1000000000
