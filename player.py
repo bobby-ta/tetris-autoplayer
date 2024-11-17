@@ -160,7 +160,7 @@ class EpicPlayer(Player):
 
         gutters_weight = holes_weight
         aggregate_height_weight = -0.1 #conservative
-        bumpiness_weight = -0.15
+        bumpiness_weight = -0.150
 
         if (lines_cleared > 0):
             print((lines_cleared * lines_cleared_weight), (holes * holes_weight), (aggregate_height * aggregate_height_weight), (bumpiness * bumpiness_weight), (gutters * gutters_weight))
