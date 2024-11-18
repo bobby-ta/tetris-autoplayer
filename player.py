@@ -32,7 +32,7 @@ class EpicPlayer(Player):
         #Lines are cleared on drop, so score will update
         lines_cleared = ((temp_clone.score - current_score) // 25)
         if lines_cleared == 1:
-            return 4
+            return 2
         elif lines_cleared == 2:
             return 16
         elif lines_cleared == 3:
