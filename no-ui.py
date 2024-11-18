@@ -22,13 +22,10 @@ def run():
         print("Bad seed:", seed)
     return board.score
 
-print(run())
-print(run())
-print(run())
-print(run())
-print(run())
 scores = []
 for i in range(20):
-    scores.append(run())
+    myrun = run()
+    print(myrun)
+    scores.append(myrun)
 scores.sort()
 print("Median:", scores[9])
