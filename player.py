@@ -13,7 +13,8 @@ class EpicPlayer(Player):
         self.random = Random(seed)
         self.move_sequences = {}
         for shape in [Shape.L, Shape.J, Shape.T, Shape.S, Shape.Z, Shape.O, Shape.I]:
-            self.move_sequences[shape] = self.gen_move_sequences(shape)
+            self.move_sequences[shape] = [[], []]
+            self.move_sequences[shape][0], self.move_sequences[shape][1] = self.gen_move_sequences(shape)
 
     #Return unique rotations for each shape
     def spin_combos(self, shape):
@@ -29,7 +30,8 @@ class EpicPlayer(Player):
     def gen_move_sequences(self, shape):
         spin_combos = self.spin_combos(shape)
 
-        move_sequences = []
+        sequences_left = []
+        sequences_right = []
         for spin_combo in spin_combos: #e.g. [Rotation.Clockwise, Rotation.Clockwise]
             if spin_combo is None:
                 spin_combo = []
@@ -37,19 +39,19 @@ class EpicPlayer(Player):
             #Shift left
             for i in range(7):
                 if isinstance(spin_combo, list):
-                    move_sequences.append(spin_combo + ([Direction.Left] * i) + [Direction.Drop])
+                    sequences_left.append(spin_combo + ([Direction.Left] * i) + [Direction.Drop])
                 else:
-                    move_sequences.append([spin_combo] + ([Direction.Left] * i) + [Direction.Drop])
+                    sequences_left.append([spin_combo] + ([Direction.Left] * i) + [Direction.Drop])
 
             #Shift right
             for i in range(1, 5): #maximum of 4 rights need to be taken
                 if isinstance(spin_combo, list):
-                    move_sequences.append(spin_combo + ([Direction.Right] * i) + [Direction.Drop])
+                    sequences_right.append(spin_combo + ([Direction.Right] * i) + [Direction.Drop])
                 else:
-                    move_sequences.append([spin_combo] + ([Direction.Right] * i) + [Direction.Drop])
+                    sequences_right.append([spin_combo] + ([Direction.Right] * i) + [Direction.Drop])
             
 
-        return move_sequences
+        return sequences_left, sequences_right
 
     #Minimise
     def aggregate_height(self, board):
@@ -174,12 +176,26 @@ class EpicPlayer(Player):
         #try:
             max_coefficient = -1000000000 #This will be the max score for ALL THE MOVES
             best_sequence = None
-            for move_sequence in self.move_sequences[board.falling.shape]:
+
+            #Check moves shifting to left
+            for move_sequence in self.move_sequences[board.falling.shape][0]:
                 current_coefficient = self.evaluate_move_sequence(board, move_sequence)
                 if current_coefficient > max_coefficient:
                     max_coefficient = current_coefficient
                     best_sequence = move_sequence
+                if board.falling.shape is not None and board.falling.left == 0:
+                    break #Avoid redundant movesets
             
+            #Check moves shifting to right
+            for move_sequence in self.move_sequences[board.falling.shape][1]:
+                current_coefficient = self.evaluate_move_sequence(board, move_sequence)
+                if current_coefficient > max_coefficient:
+                    max_coefficient = current_coefficient
+                    best_sequence = move_sequence
+    
+                if board.falling.shape is not None and board.falling.right == 9:
+                    break #Avoid redundant movesets
+        
             return best_sequence
         #except:
             #return Direction.Down
