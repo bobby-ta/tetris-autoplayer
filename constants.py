@@ -7,6 +7,7 @@ DEFAULT_SEED = 370113 #good seed
 DEFAULT_SEED = 998361 #GOOD seed
 DEFAULT_SEED = 288505 #EXCELLENT seed
 DEFAULT_SEED = 652972 #bogey seed
+DEFAULT_SEED = 919849 #misses chance for tetris???
 DEFAULT_SEED = random.randint(0, 1000000)
 
 BLOCK_LIMIT = 400

@@ -31,14 +31,14 @@ class EpicPlayer(Player):
         #Compare score before and after placing block
         #Lines are cleared on drop, so score will update
         lines_cleared = ((temp_clone.score - current_score) // 25)
-        if lines_cleared == 1:
-            return 2
-        elif lines_cleared == 2:
-            return 16
-        elif lines_cleared == 3:
-            return 64
-        elif lines_cleared == 4:
-            return 256
+        if lines_cleared <= 2:
+            return 1 #score 25
+        elif lines_cleared > 2:
+            return 2 #score 100
+        elif lines_cleared > 4:
+            return 3 #score 400
+        elif lines_cleared > 16:
+            return 1000000 #score 1600
     
     def cont_vertical(self, board):
         continuous_holes = 0
@@ -171,7 +171,9 @@ class EpicPlayer(Player):
 
                 score = aggregate_height * aggregate_height_weight + avg_height * avg_height_weight + max_height * max_height_weight + lines_cleared * lines_cleared_weight + bumpiness * bumpiness_weight + holes * holes_weight + cont_horizontal * cont_horizontal_weight + cont_vertical * cont_vertical_weight
 
-                print(aggregate_height * aggregate_height_weight, avg_height * avg_height_weight, max_height * max_height_weight, lines_cleared * lines_cleared_weight, bumpiness * bumpiness_weight, holes * holes_weight, cont_horizontal * cont_horizontal_weight, cont_vertical * cont_vertical_weight, score)
+                #print(aggregate_height * aggregate_height_weight, avg_height * avg_height_weight, max_height * max_height_weight, lines_cleared * lines_cleared_weight, bumpiness * bumpiness_weight, holes * holes_weight, cont_horizontal * cont_horizontal_weight, cont_vertical * cont_vertical_weight, score)
+                if lines_cleared > 1:
+                    print(lines_cleared)
 
                 if score > max_score:
                     max_score = score
@@ -183,6 +185,7 @@ class EpicPlayer(Player):
 
     def choose_action(self, board):
         try:
+            print("\n \n")
             max_coefficient = -1000000000 #This will be the max score for ALL THE MOVES
             best_sequence = None
             for move_sequence in self.move_sequences(board):
