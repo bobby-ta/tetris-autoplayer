@@ -124,8 +124,8 @@ class EpicPlayer(Player):
 
             #Shift right
             dist_right = temp_clone.width - temp_clone.falling.right
-            #if temp_clone.falling.shape != Shape.I and min((y for (x, y) in temp_clone.cells), default=23) > 16:
-                #dist_right -= 1
+            if temp_clone.falling.shape != Shape.I and min((y for (x, y) in temp_clone.cells), default=23) > 16:
+                dist_right -= 1
             for i in range(1, dist_right):
                 if isinstance(spin_combo, list):
                     move_sequences.append(spin_combo + ([Direction.Right] * i) + [Direction.Drop])
