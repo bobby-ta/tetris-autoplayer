@@ -30,7 +30,15 @@ class EpicPlayer(Player):
     def lines_cleared(self, current_score, temp_clone):
         #Compare score before and after placing block
         #Lines are cleared on drop, so score will update
-        return ((temp_clone.score - current_score) // 25) * 25
+        lines_cleared = ((temp_clone.score - current_score) // 25)
+        if lines_cleared == 1:
+            return 4
+        elif lines_cleared == 2:
+            return 16
+        elif lines_cleared == 3:
+            return 64
+        elif lines_cleared == 4:
+            return 256
     
     def cont_vertical(self, board):
         continuous_holes = 0
