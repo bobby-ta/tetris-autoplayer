@@ -31,44 +31,55 @@ class EpicPlayer(Player):
         #Compare score before and after placing block
         #Lines are cleared on drop, so score will update
         return ((temp_clone.score - current_score) // 25) * 25
+    
+    def cont_vertical(self, board):
+        continuous_holes = 0
+        for i in range(board.width):
+            for j in range(min((y for (x, y) in board.cells if x == i), default = 23), board.height - 1):
+                if (i, j) not in board.cells and (i, j+1) not in board.cells:
+                    continuous_holes += 1
+        return continuous_holes
+    
+    def cont_horizontal(self, board):
+        continuous_holes = 0
+        for i in range(board.width - 1):
+            for j in range(min((y for (x, y) in board.cells if x == i), default = 23), board.height):
+                if (i, j) not in board.cells and (i+1, j) not in board.cells:
+                    continuous_holes += 1
+        return continuous_holes
 
-    def columns_in_row(self, board):
-        
-    
-    
-    #Minimise
     def holes(self, board):
         holes = 0
         exp_degree = 4
         holes_already_found = set()
         for i in range(board.width):
-            for j in range(min(y for (x, y) in board.cells if x == i), board.height): #Explore all cells below block
+            for j in range(min((y for (x, y) in board.cells if x == i), default = 23), board.height): #Explore all cells below block
                     #Sealed hole/overhang
                     #Punish VERY heavily
                     #Maybe even heavier
                     if (i, j) not in board.cells and (i, j) not in holes_already_found:
-                        holes += (24-i)**(exp_degree)+20
+                        holes += 1
                         holes_already_found.add((i, j))
         return holes
 
     def gutters(self, board):
         gutters = 0
         exp_degree = 2
-        gutters_right = set()
-        gutters_left = set()
-        for x in range(board.width):
-                for i in range(min(y for (x, y) in board.cells if x == i), board.height): #Explore all cells below block
+        gutters_found = set()
+        for i in range(board.width):
+                for j in range(min((y for (x, y) in board.cells if x == i), default = 23), board.height): #Explore all cells below block
                         #Right
-                        if x < board.width - 1: #Can't be rightmost column
-                            if (x+1, i) not in board.cells and (x+1, i) not in gutters_right:
-                                gutters += (24-i)**exp_degree
-                                gutters_right.add((x+1, i))
+                        if i < board.width - 1: #Can't be rightmost column
+                            if (i+1, j) not in board.cells:
+                                #gutters += (24-i)**exp_degree
+                                gutters += 1
+                                gutters_found.add((i+1, j))
                         
                         #Left
-                        if x > 0: #Can't be leftmost column
-                            if (x-1, i) not in board.cells and (x-1, i) not in gutters_left:
-                                gutters += (24-i)**exp_degree
-                                gutters_left.add((x-1, i))
+                        if i > 0: #Can't be leftmost column
+                            if (i-1, j) not in board.cells and (i-1, j) not in gutters_found:
+                                #gutters += (24-i)**exp_degree
+                                gutters += 1
         return gutters
     
     def max_height(self, board):
@@ -113,8 +124,8 @@ class EpicPlayer(Player):
 
             #Shift right
             dist_right = temp_clone.width - temp_clone.falling.right
-            if temp_clone.falling.shape != Shape.I and min((y for (x, y) in temp_clone.cells), default=23) > 16:
-                dist_right -= 1
+            #if temp_clone.falling.shape != Shape.I and min((y for (x, y) in temp_clone.cells), default=23) > 16:
+                #dist_right -= 1
             for i in range(1, dist_right):
                 if isinstance(spin_combo, list):
                     move_sequences.append(spin_combo + ([Direction.Right] * i) + [Direction.Drop])
@@ -137,41 +148,52 @@ class EpicPlayer(Player):
 
     #Evaluate move sequence
     def evaluate_move_sequence(self, board, move_sequence):
-        try:
-            #TRY CURRENT MOVE
-            current_score = board.score
-            temp_clone = board.clone()
-            self.simulate_move_sequence(temp_clone, move_sequence)
-            
-            #TRY NEXT MOVE
-            #Find best-case scenario for after next move
-            max_score = -1000000000 #this will be the max score FOR THE CURRENTLY EVALUATED MOVE
-            best_sequence = None
-            for move_sequence in self.move_sequences(temp_clone):
+        #TRY CURRENT MOVE
+        current_score = board.score
+        temp_clone = board.clone()
+        self.simulate_move_sequence(temp_clone, move_sequence)
+        
+        #TRY NEXT MOVE
+        #Find best-case scenario for after next move
+        max_score = -1000000000 #this will be the max score FOR THE CURRENTLY EVALUATED MOVE
+        for move_sequence in self.move_sequences(temp_clone):
+            try:
                 next_step_clone = temp_clone.clone()
                 self.simulate_move_sequence(next_step_clone, move_sequence)
+
+                #Heuristics
                 aggregate_height = self.aggregate_height(next_step_clone)
-                bumpiness = self.bumpiness(next_step_clone)
+                avg_height = aggregate_height / board.width
+                max_height = self.max_height(next_step_clone)
                 lines_cleared = self.lines_cleared(current_score, next_step_clone)
+                bumpiness = self.bumpiness(next_step_clone)
                 holes = self.holes(next_step_clone)
+                gutters = self.gutters(next_step_clone)
+                cont_horizontal = self.cont_horizontal(next_step_clone)
+                cont_vertical = self.cont_vertical(next_step_clone)
+                
+                #Weights
+                aggregate_height_weight = -0 #conservative
+                avg_height_weight = -0.2
+                max_height_weight = -0.3
+                lines_cleared_weight = 1.075
+                bumpiness_weight = -0.4
+                holes_weight = -2.55
+                gutters_weight = -0
+                cont_horizontal_weight = -0.2
+                cont_vertical_weight = -0.4
 
-                lines_cleared_weight = 1
-                #Make dependent on height - stacks to top in endgame
-                try:
-                    holes_weight = -0.5 * 12 / aggregate_height
-                except ZeroDivisionError: #Flat board
-                    holes_weight = -0.75
-                aggregate_height_weight = -0.1 #conservative
-                bumpiness_weight = -0.15
+                score = aggregate_height * aggregate_height_weight + avg_height * avg_height_weight + max_height * max_height_weight + lines_cleared * lines_cleared_weight + bumpiness * bumpiness_weight + holes * holes_weight + gutters * gutters_weight + cont_horizontal * cont_horizontal_weight + cont_vertical * cont_vertical_weight
 
-                score = (lines_cleared * lines_cleared_weight) + (holes * holes_weight) + (aggregate_height * aggregate_height_weight) + (bumpiness * bumpiness_weight)
+                print(aggregate_height * aggregate_height_weight, avg_height * avg_height_weight, max_height * max_height_weight, lines_cleared * lines_cleared_weight, bumpiness * bumpiness_weight, holes * holes_weight, gutters * gutters_weight, cont_horizontal * cont_horizontal_weight, cont_vertical * cont_vertical_weight, score)
 
                 if score > max_score:
                     max_score = score
 
-            return max_score
-        except:
-            return -1000000000
+            except:
+                pass
+
+        return max_score
 
     def choose_action(self, board):
         try:
@@ -184,7 +206,7 @@ class EpicPlayer(Player):
             
             return best_sequence
         except:
-            return [Direction.Drop]
+            return Direction.Down
         
 
 #Default player
