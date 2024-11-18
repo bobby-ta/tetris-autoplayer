@@ -139,48 +139,54 @@ class EpicPlayer(Player):
 
     #Evaluate move sequence
     def evaluate_move_sequence(self, board, move_sequence):
-        #TRY CURRENT MOVE
-        current_score = board.score
-        temp_clone = board.clone()
-        self.simulate_move_sequence(temp_clone, move_sequence)
-        
-        #TRY NEXT MOVE
-        #Find best-case scenario for after next move
-        max_score = -1000000000 #this will be the max score FOR THE CURRENTLY EVALUATED MOVE
-        best_sequence = None
-        for move_sequence in self.move_sequences(temp_clone):
-            next_step_clone = temp_clone.clone()
-            self.simulate_move_sequence(next_step_clone, move_sequence)
-            aggregate_height = self.aggregate_height(next_step_clone)
-            bumpiness = self.bumpiness(next_step_clone)
-            lines_cleared = self.lines_cleared(current_score, next_step_clone)
-            holes = self.holes(next_step_clone)
+        try:
+            #TRY CURRENT MOVE
+            current_score = board.score
+            temp_clone = board.clone()
+            self.simulate_move_sequence(temp_clone, move_sequence)
+            
+            #TRY NEXT MOVE
+            #Find best-case scenario for after next move
+            max_score = -1000000000 #this will be the max score FOR THE CURRENTLY EVALUATED MOVE
+            best_sequence = None
+            for move_sequence in self.move_sequences(temp_clone):
+                next_step_clone = temp_clone.clone()
+                self.simulate_move_sequence(next_step_clone, move_sequence)
+                aggregate_height = self.aggregate_height(next_step_clone)
+                bumpiness = self.bumpiness(next_step_clone)
+                lines_cleared = self.lines_cleared(current_score, next_step_clone)
+                holes = self.holes(next_step_clone)
 
-            lines_cleared_weight = 1
-            #Make dependent on height - stacks to top in endgame
-            try:
-                holes_weight = -0.5 * 12 / aggregate_height
-            except ZeroDivisionError: #Flat board
-                holes_weight = -0.75
-            aggregate_height_weight = -0.1 #conservative
-            bumpiness_weight = -0.15
+                lines_cleared_weight = 1
+                #Make dependent on height - stacks to top in endgame
+                try:
+                    holes_weight = -0.5 * 12 / aggregate_height
+                except ZeroDivisionError: #Flat board
+                    holes_weight = -0.75
+                aggregate_height_weight = -0.1 #conservative
+                bumpiness_weight = -0.15
 
-            score = (lines_cleared * lines_cleared_weight) + (holes * holes_weight) + (aggregate_height * aggregate_height_weight) + (bumpiness * bumpiness_weight)
+                score = (lines_cleared * lines_cleared_weight) + (holes * holes_weight) + (aggregate_height * aggregate_height_weight) + (bumpiness * bumpiness_weight)
 
-            if score > max_score:
-                max_score = score
+                if score > max_score:
+                    max_score = score
 
-        return max_score
+            return max_score
+        except:
+            return -1000000000
 
     def choose_action(self, board):
-        max_coefficient = -1000000000 #This will be the max score for ALL THE MOVES
-        best_sequence = None
-        for move_sequence in self.move_sequences(board):
-            if self.evaluate_move_sequence(board, move_sequence) > max_coefficient:
-                max_coefficient = self.evaluate_move_sequence(board, move_sequence)
-                best_sequence = move_sequence
-        
-        return best_sequence
+        try:
+            max_coefficient = -1000000000 #This will be the max score for ALL THE MOVES
+            best_sequence = None
+            for move_sequence in self.move_sequences(board):
+                if self.evaluate_move_sequence(board, move_sequence) > max_coefficient:
+                    max_coefficient = self.evaluate_move_sequence(board, move_sequence)
+                    best_sequence = move_sequence
+            
+            return best_sequence
+        except:
+            return [Direction.Drop]
         
 
 #Default player
