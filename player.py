@@ -30,7 +30,9 @@ class EpicPlayer(Player):
     def lines_cleared(self, current_score, temp_clone):
         #Compare score before and after placing block
         #Lines are cleared on drop, so score will update
-        return ((temp_clone.score - current_score) // 25)**3 * 25
+        return ((temp_clone.score - current_score) // 25) * 25
+
+    def columns_in_row(self, board):
         
     
     
@@ -39,16 +41,14 @@ class EpicPlayer(Player):
         holes = 0
         exp_degree = 4
         holes_already_found = set()
-        for y in range(board.height):
-            for x in range(board.width):
-                if (x, y) in board.cells: #Do for every block cell
-                    for i in range(y, board.height): #Explore all cells below block
-                            #Sealed hole/overhang
-                            #Punish VERY heavily
-                            #Maybe even heavier
-                            if (x, i) not in board.cells and (x, i) not in holes_already_found:
-                                holes += (24-i)**(exp_degree)+20
-                                holes_already_found.add((x, i))
+        for i in range(board.width):
+            for j in range(min(y for (x, y) in board.cells if x == i), board.height): #Explore all cells below block
+                    #Sealed hole/overhang
+                    #Punish VERY heavily
+                    #Maybe even heavier
+                    if (i, j) not in board.cells and (i, j) not in holes_already_found:
+                        holes += (24-i)**(exp_degree)+20
+                        holes_already_found.add((i, j))
         return holes
 
     def gutters(self, board):
@@ -56,21 +56,19 @@ class EpicPlayer(Player):
         exp_degree = 2
         gutters_right = set()
         gutters_left = set()
-        for y in range(board.height):
-            for x in range(board.width):
-                if (x, y) in board.cells: #Do for every block cell
-                    for i in range(y, board.height): #Explore all cells below block
-                            #Right
-                            if x < board.width - 1: #Can't be rightmost column
-                                if (x+1, i) not in board.cells and (x+1, i) not in gutters_right:
-                                    gutters += (24-i)**exp_degree
-                                    gutters_right.add((x+1, i))
-                            
-                            #Left
-                            if x > 0: #Can't be leftmost column
-                                if (x-1, i) not in board.cells and (x-1, i) not in gutters_left:
-                                    gutters += (24-i)**exp_degree
-                                    gutters_left.add((x-1, i))
+        for x in range(board.width):
+                for i in range(min(y for (x, y) in board.cells if x == i), board.height): #Explore all cells below block
+                        #Right
+                        if x < board.width - 1: #Can't be rightmost column
+                            if (x+1, i) not in board.cells and (x+1, i) not in gutters_right:
+                                gutters += (24-i)**exp_degree
+                                gutters_right.add((x+1, i))
+                        
+                        #Left
+                        if x > 0: #Can't be leftmost column
+                            if (x-1, i) not in board.cells and (x-1, i) not in gutters_left:
+                                gutters += (24-i)**exp_degree
+                                gutters_left.add((x-1, i))
         return gutters
     
     def max_height(self, board):
