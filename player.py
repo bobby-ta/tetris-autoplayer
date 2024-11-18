@@ -61,26 +61,6 @@ class EpicPlayer(Player):
                         holes += 1
                         holes_already_found.add((i, j))
         return holes
-
-    def gutters(self, board):
-        gutters = 0
-        exp_degree = 2
-        gutters_found = set()
-        for i in range(board.width):
-                for j in range(min((y for (x, y) in board.cells if x == i), default = 23), board.height): #Explore all cells below block
-                        #Right
-                        if i < board.width - 1: #Can't be rightmost column
-                            if (i+1, j) not in board.cells:
-                                #gutters += (24-i)**exp_degree
-                                gutters += 1
-                                gutters_found.add((i+1, j))
-                        
-                        #Left
-                        if i > 0: #Can't be leftmost column
-                            if (i-1, j) not in board.cells and (i-1, j) not in gutters_found:
-                                #gutters += (24-i)**exp_degree
-                                gutters += 1
-        return gutters
     
     def max_height(self, board):
         return 23 - min((y for (x, y) in board.cells), default=23)
@@ -168,24 +148,22 @@ class EpicPlayer(Player):
                 lines_cleared = self.lines_cleared(current_score, next_step_clone)
                 bumpiness = self.bumpiness(next_step_clone)
                 holes = self.holes(next_step_clone)
-                gutters = self.gutters(next_step_clone)
                 cont_horizontal = self.cont_horizontal(next_step_clone)
                 cont_vertical = self.cont_vertical(next_step_clone)
                 
                 #Weights
-                aggregate_height_weight = -0 #conservative
+                aggregate_height_weight = -0
                 avg_height_weight = -0.2
                 max_height_weight = -0.3
                 lines_cleared_weight = 1.075
                 bumpiness_weight = -0.4
                 holes_weight = -2.55
-                gutters_weight = -0
                 cont_horizontal_weight = -0.2
                 cont_vertical_weight = -0.4
 
-                score = aggregate_height * aggregate_height_weight + avg_height * avg_height_weight + max_height * max_height_weight + lines_cleared * lines_cleared_weight + bumpiness * bumpiness_weight + holes * holes_weight + gutters * gutters_weight + cont_horizontal * cont_horizontal_weight + cont_vertical * cont_vertical_weight
+                score = aggregate_height * aggregate_height_weight + avg_height * avg_height_weight + max_height * max_height_weight + lines_cleared * lines_cleared_weight + bumpiness * bumpiness_weight + holes * holes_weight + cont_horizontal * cont_horizontal_weight + cont_vertical * cont_vertical_weight
 
-                print(aggregate_height * aggregate_height_weight, avg_height * avg_height_weight, max_height * max_height_weight, lines_cleared * lines_cleared_weight, bumpiness * bumpiness_weight, holes * holes_weight, gutters * gutters_weight, cont_horizontal * cont_horizontal_weight, cont_vertical * cont_vertical_weight, score)
+                print(aggregate_height * aggregate_height_weight, avg_height * avg_height_weight, max_height * max_height_weight, lines_cleared * lines_cleared_weight, bumpiness * bumpiness_weight, holes * holes_weight, cont_horizontal * cont_horizontal_weight, cont_vertical * cont_vertical_weight, score)
 
                 if score > max_score:
                     max_score = score
