@@ -72,11 +72,13 @@ class EpicPlayer(Player):
         #Compare score before and after placing block
         #Lines are cleared on drop, so score will update
         lines_cleared = ((temp_clone.score - current_score) // 25)
-        if lines_cleared <= 2:
+        if lines_cleared <= 0:
+            return 0
+        elif 0 < lines_cleared <= 1:
             return 1 #score 25
-        elif lines_cleared > 2:
+        elif 1 < lines_cleared <= 4:
             return 2 #score 100
-        elif lines_cleared > 4:
+        elif 4 < lines_cleared <= 16:
             return 3 #score 400
         elif lines_cleared > 16:
             return 1000000 #score 1600
