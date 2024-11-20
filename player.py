@@ -180,7 +180,7 @@ class EpicPlayer(Player):
                 avg_height_weight = -0.10
                 max_height_weight = -0.02
                 lines_cleared_weight = 0
-                bumpiness_weight = -0.4
+                bumpiness_weight = -0.39
                 holes_weight = -2.55
                 cont_horizontal_weight = -0.2
                 cont_vertical_weight = -0.3
