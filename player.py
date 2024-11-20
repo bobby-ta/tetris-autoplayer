@@ -184,7 +184,7 @@ class EpicPlayer(Player):
                 holes_weight = -2.5
                 cont_horizontal_weight = -0.175
                 cont_vertical_weight = -0.3
-                calc_gutters_weight = 4.8
+                calc_gutters_weight = 4.7
 
                 score = aggregate_height * aggregate_height_weight + avg_height * avg_height_weight + max_height * max_height_weight + lines_cleared * lines_cleared_weight + bumpiness * bumpiness_weight + holes * holes_weight + cont_horizontal * cont_horizontal_weight + cont_vertical * cont_vertical_weight + calc_gutters * calc_gutters_weight
 
