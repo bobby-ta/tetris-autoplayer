@@ -64,7 +64,7 @@ class EpicPlayer(Player):
     def bumpiness(self, board):
         bumpiness = 0
         for i in range(board.width - 1):
-            bumpiness += abs(min((y for (x, y) in board.cells if x == i), default=23) - min((y for (x, y) in board.cells if x == i+1), default=23))
+            bumpiness += abs(min((y for (x, y) in board.cells if x == i), default=24) - min((y for (x, y) in board.cells if x == i+1), default=24))
         return bumpiness
     
     #Maximise
@@ -72,13 +72,11 @@ class EpicPlayer(Player):
         #Compare score before and after placing block
         #Lines are cleared on drop, so score will update
         lines_cleared = ((temp_clone.score - current_score) // 25)
-        if lines_cleared <= 0:
-            return 0
-        elif 0 < lines_cleared <= 1:
+        if lines_cleared <= 2:
             return 1 #score 25
-        elif 1 < lines_cleared <= 4:
+        elif lines_cleared > 2:
             return 2 #score 100
-        elif 4 < lines_cleared <= 16:
+        elif lines_cleared > 4:
             return 3 #score 400
         elif lines_cleared > 16:
             return 1000000 #score 1600
@@ -99,22 +97,22 @@ class EpicPlayer(Player):
                     continuous_holes += 1
         return continuous_holes
 
+    #Returns coordinate of highest
+    def highest_in_col(self, board, col):
+        return min((y for (x, y) in board.cells if x == col), default=24)
+    
     def holes(self, board):
         holes = 0
-        exp_degree = 4
-        holes_already_found = set()
         for i in range(board.width):
-            for j in range(min((y for (x, y) in board.cells if x == i), default = 23), board.height): #Explore all cells below block
-                    #Sealed hole/overhang
-                    #Punish VERY heavily
-                    #Maybe even heavier
-                    if (i, j) not in board.cells and (i, j) not in holes_already_found:
+            highest_in_col = self.highest_in_col(board, i)
+            if highest_in_col < 23:
+                for j in range(highest_in_col+1, board.height): 
+                    if (i, j) not in board.cells:
                         holes += 1
-                        holes_already_found.add((i, j))
         return holes
     
     def max_height(self, board):
-        return 23 - min((y for (x, y) in board.cells), default=23)
+        return 24 - min((y for (x, y) in board.cells), default=24)
     
     #Run move sequence on clone
     def simulate_move_sequence(self, board, move_sequence):

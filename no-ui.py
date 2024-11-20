@@ -20,7 +20,9 @@ def run():
         print("Ran out of blocks")
     if board.score < 12000:
         print("Bad seed:", seed)
+    print(seed)
     return board.score
+
 
 scores = []
 for i in range(20):
