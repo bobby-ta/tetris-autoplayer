@@ -31,3 +31,4 @@ for i in range(20):
     scores.append(myrun)
 scores.sort()
 print("Median:", scores[9])
+print(scores)
